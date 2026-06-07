@@ -29,11 +29,21 @@ export function hasVapid() {
   return !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY);
 }
 
+// Il subject VAPID deve essere un URL mailto: o https:. Se arriva un'email
+// "nuda" (senza schema), anteponiamo mailto: per evitare l'errore di web-push.
+function normalizeSubject(raw) {
+  const s = (raw || '').trim();
+  if (!s) return 'mailto:test@example.com';
+  if (/^(mailto:|https:\/\/)/i.test(s)) return s;
+  if (s.includes('@')) return `mailto:${s}`;
+  return s;
+}
+
 let vapidReady = false;
 function configureVapid() {
   if (vapidReady) return;
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:test@example.com',
+    normalizeSubject(process.env.VAPID_SUBJECT),
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
   );
