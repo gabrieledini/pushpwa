@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0e0a" />
+  <title>Push PoC · Web Push su Netlify</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;700&display=swap');
+
+    :root {
+      --bg: #0a0e0a;
+      --panel: #0e140e;
+      --green: #39ff14;
+      --green-dim: #1f8a10;
+      --amber: #ffb000;
+      --red: #ff3b3b;
+      --grid: rgba(57, 255, 20, 0.06);
+      --text: #c8f7c0;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 50% -10%, rgba(57,255,20,0.10), transparent 55%),
+        repeating-linear-gradient(0deg, var(--grid) 0 1px, transparent 1px 3px),
+        var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+      letter-spacing: 0.3px;
+    }
+
+    /* leggera vignettatura + scanline da CRT */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.55) 100%);
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 540px;
+      border: 1px solid var(--green-dim);
+      background: linear-gradient(180deg, rgba(20,30,20,0.6), rgba(8,12,8,0.9));
+      box-shadow: 0 0 0 1px rgba(57,255,20,0.08), 0 0 40px rgba(57,255,20,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .titlebar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--green-dim);
+      background: rgba(57,255,20,0.05);
+      font-size: 13px;
+    }
+    .titlebar .led { width: 9px; height: 9px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+    .body { padding: 20px 18px 22px; }
+
+    h1 {
+      font-family: 'VT323', monospace;
+      font-size: 42px;
+      line-height: 1;
+      margin: 4px 0 2px;
+      color: var(--green);
+      text-shadow: 0 0 12px rgba(57,255,20,0.5);
+    }
+    .sub { font-size: 12px; color: var(--green-dim); margin-bottom: 20px; }
+
+    .status {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      border: 1px dashed var(--green-dim);
+      border-radius: 4px;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+    .dot--idle { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .dot--ok { background: var(--green); box-shadow: 0 0 8px var(--green); animation: pulse 1.6s infinite; }
+    .dot--error { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    .btns { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+
+    button {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 12px 14px;
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    button:hover:not(:disabled) {
+      background: var(--green);
+      color: var(--bg);
+      box-shadow: 0 0 16px rgba(57,255,20,0.5);
+    }
+    button:disabled { opacity: .3; cursor: not-allowed; border-color: var(--green-dim); color: var(--green-dim); }
+    #btn-disable { border-color: var(--red); color: var(--red); }
+    #btn-disable:hover:not(:disabled) { background: var(--red); color: var(--bg); box-shadow: 0 0 16px rgba(255,59,59,0.5); }
+
+    .console-label { font-size: 11px; color: var(--green-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+    #log {
+      height: 200px;
+      overflow-y: auto;
+      background: #060906;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 12.5px;
+      line-height: 1.5;
+    }
+    .line { white-space: pre-wrap; word-break: break-word; }
+    .line--ok { color: var(--green); }
+    .line--error { color: var(--red); }
+    .line--info { color: var(--text); opacity: .85; }
+
+    .foot { margin-top: 16px; font-size: 11px; color: var(--green-dim); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="titlebar">
+      <span class="led"></span>
+      <span>push-poc — netlify://web-push</span>
+    </div>
+    <div class="body">
+      <h1>WEB PUSH</h1>
+      <div class="sub">PWA + Netlify Functions + Blobs · proof of concept</div>
+
+      <div class="status">
+        <span id="status-dot" class="dot dot--idle"></span>
+        <span id="status-text">Inizializzazione…</span>
+      </div>
+
+      <div class="btns">
+        <button id="btn-enable">▶ Abilita notifiche</button>
+        <button id="btn-test" disabled>✶ Invia notifica di test</button>
+        <button id="btn-disable" disabled>✕ Disiscrivi</button>
+      </div>
+
+      <div class="console-label">Console</div>
+      <div id="log"></div>
+
+      <div class="foot">Su iOS la PWA va aggiunta alla schermata Home prima di poter ricevere push.</div>
+    </div>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>

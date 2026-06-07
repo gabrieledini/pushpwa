@@ -1,0 +1,17 @@
+# Configurazione Netlify per la PoC Web Push
+# Le Functions v2 dichiarano il proprio path internamente (export const config = { path: ... })
+
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  # Forza il bundling ESM con esbuild (necessario per import di web-push / @netlify/blobs)
+  node_bundler = "esbuild"
+
+# Header utili: il service worker deve poter controllare l'intero scope
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"

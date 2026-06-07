@@ -1,0 +1,18 @@
+{
+  "name": "push-poc",
+  "version": "1.0.0",
+  "description": "PoC: PWA + Web Push notifications su Netlify (Functions + Blobs)",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "vapid": "web-push generate-vapid-keys",
+    "dev": "netlify dev"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "Push PoC",
+  "short_name": "PushPoC",
+  "description": "Proof of concept: notifiche Web Push su PWA con backend Netlify",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0e0a",
+  "theme_color": "#0a0e0a",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
